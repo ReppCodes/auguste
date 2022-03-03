@@ -22,27 +22,55 @@ SOFTWARE.
 package ports
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"time"
 )
 
+type ScanJob struct {
+	Port int
+	Protocol string
+}
+
 type ScanResult struct {
-	Port  int
+	Port int
 	State string
 	Protocol string
 }
 
-func ScanPort(protocol, hostname string, port int) ScanResult  {
+func ToSlice(c chan ScanResult) []ScanResult {
+    s := make([]ScanResult, 0)
+    for i := range c {
+        s = append(s, i)
+    }
+    return s
+}
+
+func ScanPort(protocol, hostname string, port int, results chan ScanResult)  {
 	result := ScanResult{Port: port, Protocol: protocol}
 	address := hostname + ":" + strconv.Itoa(port)
 	conn, err := net.DialTimeout(protocol, address, 60*time.Second)
 
 	if err != nil {
 		result.State = "Closed"
-		return result
+		results <- result
 	}
 	defer conn.Close()
 	result.State = "Open"
-	return result
+	results <- result
+}
+
+func ScanEngine(scanjobs []ScanJob, target string) []ScanResult{
+	results_channel :=make(chan ScanResult)
+	defer close(results_channel)
+
+	for x := 0; x < len(scanjobs); x++ {
+		go ScanPort(scanjobs[x].Protocol, target, scanjobs[x].Port, results_channel)
+	}
+	fmt.Println("AJR got past calling loop")
+	showme := <- results_channel
+	fmt.Println(showme)
+	scan_results := []ScanResult{}
+	return scan_results
 }

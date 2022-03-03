@@ -28,11 +28,11 @@ import (
 	"github.com/ReppCodes/auguste/ports"
 )
 
-
 func main() {
 	// CLI handling
 	var scan_type string
 	var in_ports string
+	var target string = "nmap.scanme.org" // TODO add cli flag to indicate target
 	flag.StringVar(&scan_type, "t", "none", "Specify type of scan. Default is tcp active scan")
 	// TODO -- scan types to support.  figure out how to list in help function
 	// Ping Scan - This sends a ping and listens for a response
@@ -40,6 +40,7 @@ func main() {
 	// TCP Open - This is just attempting to open a TCP connection on a host:port like we have done above
 	// UDP - Very similar to TCP scanning except using the UDP protocol.
 	// Stealth Scanning - A far more sophisticated type of scan which has been designed so that these scans don’t show up in connection logs.
+	// Service Probes -- for each of the above?
 	flag.StringVar(&in_ports, "p", "none", "Specify ports to scan, format is either 0 or 0-65535. Default behavior is most commonly used ports")
 	flag.Parse()
 
@@ -52,9 +53,14 @@ func main() {
 	if in_ports == "none" {
 		fmt.Println("No ports indicated, scanning range of most commonly used ports")
 		var common_ports = ports.Get_common_ports()
+		var scan_jobs = []ports.ScanJob{}
 		for x := 0; x < len(common_ports); x++ {
-			open := ports.ScanPort("tcp", "nmap.scanme.org", common_ports[x])
-			fmt.Printf("Port %d open: %+v\n", common_ports[x], open)
+			var new_job = ports.ScanJob{Port: common_ports[x]}
+			scan_jobs = append(scan_jobs, new_job)
+		}
+		results := ports.ScanEngine(scan_jobs, target)
+		for _, value := range results {
+			fmt.Printf("%+v", value)
 		}
 	} else {
 		fmt.Printf("Port argument provided: %s\n", in_ports)
