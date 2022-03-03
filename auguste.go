@@ -27,6 +27,8 @@ import (
 	"net"
 	"strconv"
 	"time"
+
+	// "github.com/ReppCodes/auguste" TODO figure out why this isn't behaving
 )
 
 func scanPort(protocol, hostname string, port int) bool {
