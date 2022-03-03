@@ -19,7 +19,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-package main
+package ports
+
+import (
+	"sort"
+)
 
 // from awk '$2~/tcp$/' /usr/share/nmap/nmap-services | sort -r -k3 | head -n 1000 | tr -s ' ' | cut -d '/' -f1 | sed 's/\S*\s*\(\S*\).*/\1,/'
 func get_common_ports() []int {
@@ -88,5 +92,9 @@ func get_common_ports() []int {
 		3963, 1137, 9191, 3808, 8686, 3981, 9988, 1163, 4164, 3820, 6481, 3731, 40000, 2710, 3852,
 		3849, 3853, 5081, 8097, 3944, 1287, 3863, 4555, 4430, 7744, 1812, 7913, 1166, 1164, 1165,
 		10160, 8019, 4658, 7878, 1259, 1092, 10008, 3304, 3307}
+
+	sort.Slice(common_ports, func(i, j int) bool {
+		return common_ports[i] < common_ports[j]
+	})
 	return common_ports
 }

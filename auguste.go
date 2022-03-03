@@ -24,28 +24,43 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
+	"strconv"
+	"time"
 )
+
+func scanPort(protocol, hostname string, port int) bool {
+	address := hostname + ":" + strconv.Itoa(port)
+	conn, err := net.DialTimeout(protocol, address, 60*time.Second)
+
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+	return true
+}
 
 func main() {
 	// CLI handling
 	var scan_type string
 	var ports string
 	flag.StringVar(&scan_type, "t", "none", "Specify type of scan. Default is tcp active scan")
-	flag.StringVar(&ports, "p", "none", "Specify ports to scan. Default behavior is most commonly used ports")
+	flag.StringVar(&ports, "p", "none", "Specify ports to scan, format is either 0 or 0-65535. Default behavior is most commonly used ports")
 	flag.Parse()
-
-	// parse ports if provided
-	if ports == "none" {
-		fmt.Println("no ports provided yo")
-		var common_ports = get_common_ports()
-		for x := 0; x < len(get_common_ports()); x++ {
-			fmt.Printf("%d\n", common_ports[x])
-		}
-	}
 
 	// parse scan type
 	if scan_type == "none" {
 		fmt.Println("no scan_type provided yo")
+	}
+
+	// parse ports if provided
+	if ports == "none" {
+		fmt.Println("no ports provided yo")
+		var common_ports = ports.get_common_ports()
+		for x := 0; x < len(common_ports); x++ {
+			open := scanPort("tcp", "nmap.scanme.org", common_ports[x])
+			fmt.Printf("Port %d open: %t\n", common_ports[x], open)
+		}
 	}
 
 }
