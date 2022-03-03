@@ -24,30 +24,23 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net"
-	"strconv"
-	"time"
 
-	// "github.com/ReppCodes/auguste" TODO figure out why this isn't behaving
+	"github.com/ReppCodes/auguste/ports"
 )
 
-func scanPort(protocol, hostname string, port int) bool {
-	address := hostname + ":" + strconv.Itoa(port)
-	conn, err := net.DialTimeout(protocol, address, 60*time.Second)
-
-	if err != nil {
-		return false
-	}
-	defer conn.Close()
-	return true
-}
 
 func main() {
 	// CLI handling
 	var scan_type string
-	var ports string
+	var in_ports string
 	flag.StringVar(&scan_type, "t", "none", "Specify type of scan. Default is tcp active scan")
-	flag.StringVar(&ports, "p", "none", "Specify ports to scan, format is either 0 or 0-65535. Default behavior is most commonly used ports")
+	// TODO -- scan types to support.  figure out how to list in help function
+	// Ping Scan - This sends a ping and listens for a response
+	// TCP Half-Open - Also known as SYN scan, these scans attempt to start a TCP connection, listen for the SYN-ACK response and then never send the final ACK.
+	// TCP Open - This is just attempting to open a TCP connection on a host:port like we have done above
+	// UDP - Very similar to TCP scanning except using the UDP protocol.
+	// Stealth Scanning - A far more sophisticated type of scan which has been designed so that these scans don’t show up in connection logs.
+	flag.StringVar(&in_ports, "p", "none", "Specify ports to scan, format is either 0 or 0-65535. Default behavior is most commonly used ports")
 	flag.Parse()
 
 	// parse scan type
@@ -56,13 +49,14 @@ func main() {
 	}
 
 	// parse ports if provided
-	if ports == "none" {
-		fmt.Println("no ports provided yo")
-		var common_ports = ports.get_common_ports()
+	if in_ports == "none" {
+		fmt.Println("No ports indicated, scanning range of most commonly used ports")
+		var common_ports = ports.Get_common_ports()
 		for x := 0; x < len(common_ports); x++ {
-			open := scanPort("tcp", "nmap.scanme.org", common_ports[x])
-			fmt.Printf("Port %d open: %t\n", common_ports[x], open)
+			open := ports.ScanPort("tcp", "nmap.scanme.org", common_ports[x])
+			fmt.Printf("Port %d open: %+v\n", common_ports[x], open)
 		}
+	} else {
+		fmt.Printf("Port argument provided: %s\n", in_ports)
 	}
-
 }
